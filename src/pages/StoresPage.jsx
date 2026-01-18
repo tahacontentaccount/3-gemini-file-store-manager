@@ -47,11 +47,12 @@ const StoresPage = () => {
     setCreating(true);
     try {
       const response = await api.createStore(storeName.trim());
-      if (response.success) {
+      if (response.success && response.store) {
         toast.success('Store created!');
+        // Optimistically add the new store to state (API has propagation delay)
+        setStores(prev => [response.store, ...prev]);
         setIsModalOpen(false);
         setStoreName('');
-        loadStores();
       } else {
         toast.error(response.error || 'Failed to create store');
       }
