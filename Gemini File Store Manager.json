@@ -1,0 +1,782 @@
+{
+  "name": "Gemini File Store Manager",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "gemini-api",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "7b7c96d7-a7ea-40ab-8dc5-b15cefb53aa0",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        2144,
+        768
+      ],
+      "webhookId": "gemini-api"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Webhook').item.json.body.action }}",
+                    "rightValue": "list_stores",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "list_stores"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Webhook').item.json.body.action }}",
+                    "rightValue": "list_docs",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "list_docs"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Webhook').item.json.body.action }}",
+                    "rightValue": "create_store",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "create_store"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Webhook').item.json.body.action }}",
+                    "rightValue": "upload",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "upload"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Webhook').item.json.body.action }}",
+                    "rightValue": "delete_store",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "delete_store"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Webhook').item.json.body.action }}",
+                    "rightValue": "delete_doc",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "delete_doc"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Webhook').item.json.body.action }}",
+                    "rightValue": "chat",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "chat"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "749957ea-daff-4f22-b520-5927bd1dfea0",
+      "name": "Route by Action",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        2592,
+        688
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, action: 'list_stores', stores: $json.fileSearchStores || [] }) }}",
+        "options": {}
+      },
+      "id": "a8f48911-9124-4bf6-80cd-e743ae9ebadf",
+      "name": "Respond List Stores",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        3072,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, action: 'list_docs', documents: $json.documents || [] }) }}",
+        "options": {}
+      },
+      "id": "94dfc0b6-3736-43e9-b966-5e2deee30ec3",
+      "name": "Respond List Docs",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        3072,
+        432
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: !$json.error && $json.name, action: 'create_store', store: $json.error ? null : ($json.name ? $json : null), error: $json.error ? ($json.error.message || $json.error.code || JSON.stringify($json.error)) : ($json.name ? null : 'Store creation failed - invalid response'), rawResponse: $json }) }}",
+        "options": {}
+      },
+      "id": "09bbc799-d6a7-4913-b56b-457438207c99",
+      "name": "Respond Create Store",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        3072,
+        576
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, action: 'upload', data: $json }) }}",
+        "options": {}
+      },
+      "id": "e829d6cc-a7bf-4c4a-b124-71ee3f19ae12",
+      "name": "Respond Upload",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        3296,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, action: 'delete_store', message: 'Store deleted' }) }}",
+        "options": {}
+      },
+      "id": "fc7e6112-d80d-4287-b647-3cb3b8578de6",
+      "name": "Respond Delete Store",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        3072,
+        848
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, action: 'delete_doc', message: 'Document deleted' }) }}",
+        "options": {}
+      },
+      "id": "a0a3d6e0-e4ec-4861-a7ca-35f1cc3393e9",
+      "name": "Respond Delete Doc",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        3072,
+        992
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "cb2eab63-aca4-4557-923f-9808e557c2e8",
+      "name": "Respond Chat",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        3296,
+        1136
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "GEMINI_API_KEY",
+              "value": "={{ $json.body.apiKey }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "9b02823b-79ec-40fa-aec0-5ecc0df3f893",
+      "name": "Config5",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2352,
+        768
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://generativelanguage.googleapis.com/v1beta/fileSearchStores",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-goog-api-key",
+              "value": "={{ $json.GEMINI_API_KEY }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ffe9489a-bec1-455d-8e9f-6dd6c2dfb0fa",
+      "name": "List Stores1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2848,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://generativelanguage.googleapis.com/v1beta/fileSearchStores/{{ $('Webhook').item.json.body.storeId }}/documents",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-goog-api-key",
+              "value": "={{ $json.GEMINI_API_KEY }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "05e4c508-d854-4bd5-aa60-0543cebe391e",
+      "name": "List Documents1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2848,
+        432
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/fileSearchStores",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-goog-api-key",
+              "value": "={{ $json.GEMINI_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ displayName: $('Webhook').item.json.body.displayName }) }}",
+        "options": {}
+      },
+      "id": "e5ee7e40-279e-4f15-a636-fd3e86bd4e54",
+      "name": "Create Store1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2848,
+        576
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = [];\n\nconst extToMime = {\n  pdf: \"application/pdf\",\n  txt: \"text/plain\",\n  md: \"text/markdown\",\n  markdown: \"text/markdown\",\n  csv: \"text/csv\",\n  json: \"application/json\",\n  xml: \"application/xml\",\n  html: \"text/html\",\n  doc: \"application/msword\",\n  docx: \"application/vnd.openxmlformats-officedocument.wordprocessingml.document\",\n  ppt: \"application/vnd.ms-powerpoint\",\n  pptx: \"application/vnd.openxmlformats-officedocument.presentationml.presentation\",\n  xls: \"application/vnd.ms-excel\",\n  xlsx: \"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet\",\n  png: \"image/png\",\n  jpg: \"image/jpeg\",\n  jpeg: \"image/jpeg\",\n};\n\nfunction getExt(fileName) {\n  if (!fileName) return \"\";\n  const parts = fileName.toLowerCase().split(\".\");\n  return parts.length > 1 ? parts.pop() : \"\";\n}\n\nfunction isGenericMime(m) {\n  if (!m) return true;\n  const lower = String(m).toLowerCase();\n  return lower === \"application/octet-stream\" || lower === \"binary/octet-stream\" || lower === \"application/unknown\";\n}\n\nfor (const item of items) {\n  const b = item.binary?.file;\n  if (!b) { results.push(item); continue; }\n\n  const fileName = b.fileName || \"\";\n  const ext = getExt(fileName);\n  let finalMime = b.mimeType;\n\n  if (isGenericMime(b.mimeType)) {\n    finalMime = extToMime[ext] || b.mimeType || \"application/octet-stream\";\n  }\n\n  b.mimeType = finalMime;\n  results.push({ json: { ...item.json, filename: fileName || \"uploaded-file\", mimetype: finalMime }, binary: { ...item.binary, file: b } });\n}\n\nreturn results;"
+      },
+      "id": "2737af8a-c669-461d-8c60-ca1c78508e3d",
+      "name": "Fix MIME Type1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2848,
+        720
+      ],
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://generativelanguage.googleapis.com/upload/v1beta/fileSearchStores/{{ $('Webhook').item.json.body.storeId }}:uploadToFileSearchStore",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Goog-Upload-Protocol",
+              "value": "multipart"
+            },
+            {
+              "name": "Content-Type",
+              "value": "multipart/form-data"
+            },
+            {
+              "name": "x-goog-api-key",
+              "value": "={{ $('Config5').item.json.GEMINI_API_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "metadata",
+              "value": "={{ JSON.stringify({ displayName: $json.filename }) }}"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "file"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "60c3975e-f6c4-4e87-8d68-6ac2f9f6d2db",
+      "name": "Upload to Gemini1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3072,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/fileSearchStores/{{ $('Webhook').item.json.body.storeId }}?force=true",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-goog-api-key",
+              "value": "={{ $json.GEMINI_API_KEY }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "33ef8e96-52f0-48bd-b338-12fb45c11e1d",
+      "name": "Delete Store1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2848,
+        848
+      ]
+    },
+    {
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/fileSearchStores/{{ $('Webhook').item.json.body.storeId }}/documents/{{ $('Webhook').item.json.body.documentId }}?force=true",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-goog-api-key",
+              "value": "={{ $json.GEMINI_API_KEY }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "45a6e0b9-45f8-417d-a682-639cd6e7425e",
+      "name": "Delete Document1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2848,
+        992
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-goog-api-key",
+              "value": "={{ $json.GEMINI_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [\n    {\n      \"role\": \"user\",\n      \"parts\": [{ \"text\": \"{{ $('Webhook').item.json.body.message }}\" }]\n    }\n  ],\n  \"tools\": [\n    {\n      \"fileSearch\": {\n        \"fileSearchStoreNames\": [\"fileSearchStores/{{ $('Webhook').item.json.body.storeId }}\"],\n        \"topK\": 5\n      }\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "c0c288e1-5628-4a27-92d0-5c945151c8ee",
+      "name": "Chat with Gemini1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2848,
+        1136
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = items[0].json;\nlet answer = '';\n\nif (response.candidates && response.candidates[0] && response.candidates[0].content && response.candidates[0].content.parts) {\n  answer = response.candidates[0].content.parts.map(p => p.text || '').join('');\n}\n\nreturn [{ json: { success: true, action: 'chat', answer: answer } }];"
+      },
+      "id": "f4e28d98-9747-4fa9-9ec1-1351f55ef06c",
+      "name": "Extract Answer1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3072,
+        1136
+      ]
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "tahayt.app.n8n.cloud",
+            "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Cursor/2.1.48 Chrome/138.0.7204.251 Electron/37.7.0 Safari/537.36",
+            "content-length": "75",
+            "accept": "*/*",
+            "accept-encoding": "gzip, br",
+            "accept-language": "en-US",
+            "cdn-loop": "cloudflare; loops=1; subreqs=1",
+            "cf-connecting-ip": "94.140.11.205",
+            "cf-ew-via": "15",
+            "cf-ipcountry": "US",
+            "cf-ray": "9bf92657767eba37-MIA",
+            "cf-visitor": "{\"scheme\":\"https\"}",
+            "cf-worker": "n8n.cloud",
+            "content-type": "application/json",
+            "origin": "http://localhost:5174",
+            "priority": "u=1, i",
+            "referer": "http://localhost:5174/",
+            "sec-ch-ua": "\"Not)A;Brand\";v=\"8\", \"Chromium\";v=\"138\"",
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": "\"macOS\"",
+            "sec-fetch-dest": "empty",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-site": "cross-site",
+            "x-forwarded-for": "94.140.11.205, 172.68.12.179",
+            "x-forwarded-host": "tahayt.app.n8n.cloud",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "traefik-prod-users-gwc-78-74d8c5c9cc-dwgl8",
+            "x-is-trusted": "yes",
+            "x-real-ip": "94.140.11.205"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "action": "list_stores",
+            "apiKey": "AIzaSyDItMt-Z8Xt0B2-60pw94al16bys_bBZOc"
+          },
+          "webhookUrl": "https://tahayt.app.n8n.cloud/webhook/gemini-api",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Config5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Action": {
+      "main": [
+        [
+          {
+            "node": "List Stores1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "List Documents1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Store1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fix MIME Type1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Delete Store1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Delete Document1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Chat with Gemini1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config5": {
+      "main": [
+        [
+          {
+            "node": "Route by Action",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List Stores1": {
+      "main": [
+        [
+          {
+            "node": "Respond List Stores",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List Documents1": {
+      "main": [
+        [
+          {
+            "node": "Respond List Docs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Store1": {
+      "main": [
+        [
+          {
+            "node": "Respond Create Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fix MIME Type1": {
+      "main": [
+        [
+          {
+            "node": "Upload to Gemini1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload to Gemini1": {
+      "main": [
+        [
+          {
+            "node": "Respond Upload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete Store1": {
+      "main": [
+        [
+          {
+            "node": "Respond Delete Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete Document1": {
+      "main": [
+        [
+          {
+            "node": "Respond Delete Doc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat with Gemini1": {
+      "main": [
+        [
+          {
+            "node": "Extract Answer1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Answer1": {
+      "main": [
+        [
+          {
+            "node": "Respond Chat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "ccc2f275-e720-4443-81a1-fa2b34a8574d",
+  "meta": {
+    "instanceId": "b03fc610fe97eb148151c7253ec8909618b17b85882670604f6bc6fe7e9fb898"
+  },
+  "id": "aK4u5SB7pSX55Dpe",
+  "tags": []
+}
