@@ -45,20 +45,47 @@ const StoresPage = () => {
   const handleCreateStore = async () => {
     if (creating || !storeName.trim()) return;
     setCreating(true);
+    setIsModalOpen(false);
+    setLoading(true);
+    
     try {
       const response = await api.createStore(storeName.trim());
       if (response.success && response.store) {
-        toast.success('Store created!');
-        // Optimistically add the new store to state (API has propagation delay)
-        setStores(prev => [response.store, ...prev]);
-        setIsModalOpen(false);
-        setStoreName('');
+        toast.success('Store created! Waiting for it to be indexed...');
+        
+        // Poll until the store appears in the list
+        const storeName = response.store.name;
+        let attempts = 0;
+        const maxAttempts = 20; // 20 seconds max
+        
+        while (attempts < maxAttempts) {
+          await new Promise(r => setTimeout(r, 1000));
+          const listResponse = await api.listStores();
+          if (listResponse.success) {
+            const found = listResponse.stores.find(s => s.name === storeName);
+            if (found) {
+              setStores(listResponse.stores);
+              setStoreName('');
+              setLoading(false);
+              setCreating(false);
+              toast.success('Store ready!');
+              return;
+            }
+          }
+          attempts++;
+        }
+        
+        // Timeout - just refresh anyway
+        await loadStores();
+        toast('Store created but may take a moment to appear');
       } else {
         toast.error(response.error || 'Failed to create store');
       }
     } catch (error) {
       toast.error('Error: ' + error.message);
     }
+    setStoreName('');
+    setLoading(false);
     setCreating(false);
   };
 
