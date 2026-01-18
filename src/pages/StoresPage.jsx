@@ -20,8 +20,7 @@ const StoresPage = () => {
 
   useEffect(() => {
     const apiKey = localStorage.getItem('gemini_api_key');
-    const webhookUrl = localStorage.getItem('n8n_webhook_url');
-    if (!apiKey || !webhookUrl) {
+    if (!apiKey) {
       navigate('/');
       return;
     }
@@ -32,8 +31,10 @@ const StoresPage = () => {
     setLoading(true);
     try {
       const response = await api.listStores();
-      if (response.success && response.stores) {
-        setStores(response.stores);
+      if (response.success) {
+        setStores(response.stores || []);
+      } else {
+        toast.error(response.error || 'Failed to load stores');
       }
     } catch (error) {
       toast.error('Error: ' + error.message);
@@ -47,7 +48,7 @@ const StoresPage = () => {
     try {
       const response = await api.createStore(storeName.trim());
       if (response.success) {
-        toast.success('Store created');
+        toast.success('Store created!');
         setIsModalOpen(false);
         setStoreName('');
         loadStores();
@@ -67,6 +68,8 @@ const StoresPage = () => {
       if (response.success) {
         toast.success('Store deleted');
         loadStores();
+      } else {
+        toast.error(response.error || 'Failed to delete');
       }
     } catch (error) {
       toast.error('Error: ' + error.message);
@@ -75,7 +78,6 @@ const StoresPage = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('gemini_api_key');
-    localStorage.removeItem('n8n_webhook_url');
     navigate('/');
   };
 

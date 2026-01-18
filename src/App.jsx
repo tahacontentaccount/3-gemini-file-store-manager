@@ -7,8 +7,7 @@ import ChatPage from './pages/ChatPage';
 
 const ProtectedRoute = ({ children }) => {
   const apiKey = localStorage.getItem('gemini_api_key');
-  const n8nUrl = localStorage.getItem('n8n_webhook_url');
-  return (apiKey && n8nUrl) ? children : <Navigate to="/" replace />;
+  return apiKey ? children : <Navigate to="/" replace />;
 };
 
 function App() {

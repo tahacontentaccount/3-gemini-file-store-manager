@@ -1,63 +1,125 @@
+const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta';
+
 const useApi = () => {
-  const getApiUrl = () => localStorage.getItem('n8n_webhook_url');
   const getApiKey = () => localStorage.getItem('gemini_api_key');
 
-  // Convert file to base64
-  const fileToBase64 = (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const base64 = reader.result.split(',')[1]; // Remove data:...;base64, prefix
-        resolve(base64);
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
+  const headers = () => ({
+    'x-goog-api-key': getApiKey(),
+    'Content-Type': 'application/json'
+  });
+
+  // List all file search stores
+  const listStores = async () => {
+    const res = await fetch(`${GEMINI_BASE}/fileSearchStores`, {
+      headers: { 'x-goog-api-key': getApiKey() }
     });
+    const data = await res.json();
+    if (data.error) {
+      return { success: false, error: data.error.message };
+    }
+    return { success: true, stores: data.fileSearchStores || [] };
   };
 
-  const callApi = async (action, data = {}, file = null) => {
-    const url = getApiUrl();
-    const apiKey = getApiKey();
-    
-    if (!url) {
-      throw new Error('Webhook URL not configured');
-    }
-
-    // For file uploads, convert to base64 and send as JSON
-    if (file) {
-      const base64 = await fileToBase64(file);
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action,
-          apiKey,
-          storeId: data.storeId,
-          fileName: file.name,
-          mimeType: file.type || 'application/octet-stream',
-          fileData: base64
-        })
-      });
-      return res.json();
-    }
-
-    const res = await fetch(url, {
+  // Create a new store
+  const createStore = async (displayName) => {
+    const res = await fetch(`${GEMINI_BASE}/fileSearchStores`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action, apiKey, ...data })
+      headers: headers(),
+      body: JSON.stringify({ displayName })
     });
-    return res.json();
+    const data = await res.json();
+    if (data.error) {
+      return { success: false, error: data.error.message };
+    }
+    return { success: true, store: data };
   };
 
-  return {
-    listStores: () => callApi('list_stores'),
-    listDocs: (storeId) => callApi('list_docs', { storeId }),
-    createStore: (displayName) => callApi('create_store', { displayName }),
-    uploadDoc: (storeId, file) => callApi('upload', { storeId }, file),
-    deleteStore: (storeId) => callApi('delete_store', { storeId }),
-    deleteDoc: (storeId, documentId) => callApi('delete_doc', { storeId, documentId }),
-    chat: (storeId, message) => callApi('chat', { storeId, message })
+  // Delete a store
+  const deleteStore = async (storeId) => {
+    const res = await fetch(`${GEMINI_BASE}/${storeId}?force=true`, {
+      method: 'DELETE',
+      headers: { 'x-goog-api-key': getApiKey() }
+    });
+    if (res.status === 200 || res.status === 204) {
+      return { success: true };
+    }
+    const data = await res.json();
+    return { success: false, error: data.error?.message || 'Delete failed' };
   };
+
+  // List documents in a store
+  const listDocs = async (storeId) => {
+    const res = await fetch(`${GEMINI_BASE}/${storeId}/documents`, {
+      headers: { 'x-goog-api-key': getApiKey() }
+    });
+    const data = await res.json();
+    if (data.error) {
+      return { success: false, error: data.error.message };
+    }
+    return { success: true, documents: data.documents || [] };
+  };
+
+  // Delete a document
+  const deleteDoc = async (storeId, documentId) => {
+    const res = await fetch(`${GEMINI_BASE}/${storeId}/documents/${documentId}?force=true`, {
+      method: 'DELETE',
+      headers: { 'x-goog-api-key': getApiKey() }
+    });
+    if (res.status === 200 || res.status === 204) {
+      return { success: true };
+    }
+    const data = await res.json();
+    return { success: false, error: data.error?.message || 'Delete failed' };
+  };
+
+  // Upload a document to a store
+  const uploadDoc = async (storeId, file) => {
+    const formData = new FormData();
+    formData.append('metadata', JSON.stringify({ displayName: file.name }));
+    formData.append('file', file);
+
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/upload/v1beta/${storeId}:uploadToFileSearchStore`,
+      {
+        method: 'POST',
+        headers: {
+          'x-goog-api-key': getApiKey(),
+          'X-Goog-Upload-Protocol': 'multipart'
+        },
+        body: formData
+      }
+    );
+    const data = await res.json();
+    if (data.error) {
+      return { success: false, error: data.error.message };
+    }
+    return { success: true, document: data };
+  };
+
+  // Chat with documents in a store
+  const chat = async (storeId, message) => {
+    const res = await fetch(`${GEMINI_BASE}/models/gemini-2.0-flash:generateContent`, {
+      method: 'POST',
+      headers: headers(),
+      body: JSON.stringify({
+        contents: [{ role: 'user', parts: [{ text: message }] }],
+        tools: [{
+          fileSearch: {
+            fileSearchStoreNames: [`fileSearchStores/${storeId}`],
+            topK: 5
+          }
+        }]
+      })
+    });
+    const data = await res.json();
+    if (data.error) {
+      return { success: false, error: data.error.message };
+    }
+    const answer = data.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('') || 'No response';
+    return { success: true, answer };
+  };
+
+  return { listStores, createStore, deleteStore, listDocs, deleteDoc, uploadDoc, chat };
 };
 
 export default useApi;

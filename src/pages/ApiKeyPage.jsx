@@ -5,24 +5,19 @@ import Button from '../components/Button';
 
 const ApiKeyPage = () => {
   const [apiKey, setApiKey] = useState('');
-  const [webhookUrl, setWebhookUrl] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
     const storedKey = localStorage.getItem('gemini_api_key');
-    const storedUrl = localStorage.getItem('n8n_webhook_url');
-    if (storedKey && storedUrl) {
+    if (storedKey) {
       navigate('/stores');
-    } else if (storedUrl) {
-      setWebhookUrl(storedUrl);
     }
   }, [navigate]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (apiKey.trim() && webhookUrl.trim()) {
+    if (apiKey.trim()) {
       localStorage.setItem('gemini_api_key', apiKey.trim());
-      localStorage.setItem('n8n_webhook_url', webhookUrl.trim());
       navigate('/stores');
     }
   };
@@ -87,23 +82,6 @@ const ApiKeyPage = () => {
               color: '#374151',
               marginBottom: '8px'
             }}>
-              Webhook URL
-            </label>
-            <Input
-              type="text"
-              value={webhookUrl}
-              onChange={(e) => setWebhookUrl(e.target.value)}
-              placeholder="https://your-instance.app.n8n.cloud/webhook/gemini-api"
-            />
-          </div>
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{
-              display: 'block',
-              fontSize: '14px',
-              fontWeight: '600',
-              color: '#374151',
-              marginBottom: '8px'
-            }}>
               Gemini API Key
             </label>
             <Input
@@ -113,8 +91,11 @@ const ApiKeyPage = () => {
               placeholder="Enter your Gemini API Key"
               showPasswordToggle={true}
             />
+            <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '8px' }}>
+              Get your API key from <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" style={{ color: '#667eea' }}>Google AI Studio</a>
+            </p>
           </div>
-          <Button type="submit" disabled={!apiKey.trim() || !webhookUrl.trim()} style={{ width: '100%' }}>
+          <Button type="submit" disabled={!apiKey.trim()} style={{ width: '100%' }}>
             Continue
           </Button>
         </form>
