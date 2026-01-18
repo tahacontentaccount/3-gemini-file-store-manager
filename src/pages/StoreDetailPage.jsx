@@ -20,7 +20,7 @@ const StoreDetailPage = () => {
 
   useEffect(() => {
     const apiKey = localStorage.getItem('gemini_api_key');
-    const n8nUrl = localStorage.getItem('n8n_base_url');
+    const n8nUrl = localStorage.getItem('n8n_webhook_url');
     if (!apiKey || !n8nUrl) {
       navigate('/');
       return;

@@ -5,29 +5,24 @@ import Button from '../components/Button';
 
 const ApiKeyPage = () => {
   const [apiKey, setApiKey] = useState('');
-  const [n8nBaseUrl, setN8nBaseUrl] = useState('');
+  const [webhookUrl, setWebhookUrl] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
     const storedKey = localStorage.getItem('gemini_api_key');
-    const storedUrl = localStorage.getItem('n8n_base_url');
+    const storedUrl = localStorage.getItem('n8n_webhook_url');
     if (storedKey && storedUrl) {
       navigate('/stores');
-    } else {
-      // Pre-fill with stored values if they exist
-      if (storedUrl) {
-        setN8nBaseUrl(storedUrl);
-      }
+    } else if (storedUrl) {
+      setWebhookUrl(storedUrl);
     }
   }, [navigate]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (apiKey.trim() && n8nBaseUrl.trim()) {
-      // Remove trailing slash if present
-      const cleanUrl = n8nBaseUrl.trim().replace(/\/$/, '');
+    if (apiKey.trim() && webhookUrl.trim()) {
       localStorage.setItem('gemini_api_key', apiKey.trim());
-      localStorage.setItem('n8n_base_url', cleanUrl);
+      localStorage.setItem('n8n_webhook_url', webhookUrl.trim());
       navigate('/stores');
     }
   };
@@ -92,17 +87,14 @@ const ApiKeyPage = () => {
               color: '#374151',
               marginBottom: '8px'
             }}>
-              n8n Webhook URL
+              Webhook URL
             </label>
             <Input
               type="text"
-              value={n8nBaseUrl}
-              onChange={(e) => setN8nBaseUrl(e.target.value)}
-              placeholder="https://tahayt.app.n8n.cloud/webhook"
+              value={webhookUrl}
+              onChange={(e) => setWebhookUrl(e.target.value)}
+              placeholder="https://your-instance.app.n8n.cloud/webhook/gemini-api"
             />
-            <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>
-              Your n8n webhook base URL (without /gemini-api)
-            </p>
           </div>
           <div style={{ marginBottom: '16px' }}>
             <label style={{
@@ -122,7 +114,7 @@ const ApiKeyPage = () => {
               showPasswordToggle={true}
             />
           </div>
-          <Button type="submit" disabled={!apiKey.trim() || !n8nBaseUrl.trim()} style={{ width: '100%' }}>
+          <Button type="submit" disabled={!apiKey.trim() || !webhookUrl.trim()} style={{ width: '100%' }}>
             Continue
           </Button>
         </form>
