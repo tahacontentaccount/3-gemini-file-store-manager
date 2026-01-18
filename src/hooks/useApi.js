@@ -4,8 +4,18 @@ const useApi = () => {
   const getApiKey = () => localStorage.getItem('gemini_api_key');
 
   const callApi = async (action, data = {}, file = null) => {
+    // Check if baseUrl is configured
+    if (!baseUrl || baseUrl === 'undefined') {
+      const error = new Error('API endpoint not configured. Please set VITE_N8N_BASE_URL environment variable.');
+      console.error('Missing VITE_N8N_BASE_URL:', error);
+      throw error;
+    }
+
     const url = `${baseUrl}/gemini-api`;
     const apiKey = getApiKey();
+    
+    console.log('API Base URL:', baseUrl);
+    console.log('Full API URL:', url);
 
     if (file) {
       // Multipart for file upload
@@ -15,24 +25,56 @@ const useApi = () => {
       formData.append('apiKey', apiKey);
       if (data.storeId) formData.append('storeId', data.storeId);
 
-      const res = await fetch(url, { 
-        method: 'POST', 
-        body: formData 
-      });
-      return res.json();
+      try {
+        const res = await fetch(url, { 
+          method: 'POST', 
+          body: formData 
+        });
+
+        if (!res.ok) {
+          const errorText = await res.text();
+          console.error('API Error Response:', res.status, res.statusText, errorText);
+          throw new Error(`API request failed: ${res.status} ${res.statusText} - ${errorText}`);
+        }
+
+        return await res.json();
+      } catch (error) {
+        if (error.name === 'TypeError' && error.message.includes('fetch')) {
+          console.error('Network error:', error);
+          throw new Error(`Failed to connect to API. Check your network connection and CORS settings. URL: ${url}`);
+        }
+        throw error;
+      }
     }
 
     const requestBody = { action, apiKey, ...data };
     console.log('API Request:', action, JSON.stringify(requestBody, null, 2));
     
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(requestBody)
-    });
-    const responseData = await res.json();
-    console.log('API Response:', action, JSON.stringify(responseData, null, 2));
-    return responseData;
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody)
+      });
+
+      // Check if response is ok
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('API Error Response:', res.status, res.statusText, errorText);
+        throw new Error(`API request failed: ${res.status} ${res.statusText} - ${errorText}`);
+      }
+
+      const responseData = await res.json();
+      console.log('API Response:', action, JSON.stringify(responseData, null, 2));
+      return responseData;
+    } catch (error) {
+      // Handle network errors, CORS errors, etc.
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        console.error('Network error:', error);
+        throw new Error(`Failed to connect to API. Check your network connection and CORS settings. URL: ${url}`);
+      }
+      throw error;
+    }
   };
 
   return {

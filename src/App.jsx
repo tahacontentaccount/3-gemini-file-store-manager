@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
+import EnvCheck from './components/EnvCheck';
 import ApiKeyPage from './pages/ApiKeyPage';
 import StoresPage from './pages/StoresPage';
 import StoreDetailPage from './pages/StoreDetailPage';
@@ -12,9 +13,10 @@ const ProtectedRoute = ({ children }) => {
 
 function App() {
   return (
-    <BrowserRouter>
-      <Toaster position="top-right" />
-      <Routes>
+    <EnvCheck>
+      <BrowserRouter>
+        <Toaster position="top-right" />
+        <Routes>
         <Route path="/" element={<ApiKeyPage />} />
         <Route
           path="/stores"
@@ -41,7 +43,8 @@ function App() {
           }
         />
       </Routes>
-    </BrowserRouter>
+      </BrowserRouter>
+    </EnvCheck>
   );
 }
 
