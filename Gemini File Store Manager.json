@@ -389,10 +389,10 @@
     },
     {
       "parameters": {
-        "jsCode": "const results = [];\n\nconst extToMime = {\n  pdf: \"application/pdf\",\n  txt: \"text/plain\",\n  md: \"text/markdown\",\n  markdown: \"text/markdown\",\n  csv: \"text/csv\",\n  json: \"application/json\",\n  xml: \"application/xml\",\n  html: \"text/html\",\n  doc: \"application/msword\",\n  docx: \"application/vnd.openxmlformats-officedocument.wordprocessingml.document\",\n  ppt: \"application/vnd.ms-powerpoint\",\n  pptx: \"application/vnd.openxmlformats-officedocument.presentationml.presentation\",\n  xls: \"application/vnd.ms-excel\",\n  xlsx: \"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet\",\n  png: \"image/png\",\n  jpg: \"image/jpeg\",\n  jpeg: \"image/jpeg\",\n};\n\nfunction getExt(fileName) {\n  if (!fileName) return \"\";\n  const parts = fileName.toLowerCase().split(\".\");\n  return parts.length > 1 ? parts.pop() : \"\";\n}\n\nfunction isGenericMime(m) {\n  if (!m) return true;\n  const lower = String(m).toLowerCase();\n  return lower === \"application/octet-stream\" || lower === \"binary/octet-stream\" || lower === \"application/unknown\";\n}\n\nfor (const item of items) {\n  const b = item.binary?.file;\n  if (!b) { results.push(item); continue; }\n\n  const fileName = b.fileName || \"\";\n  const ext = getExt(fileName);\n  let finalMime = b.mimeType;\n\n  if (isGenericMime(b.mimeType)) {\n    finalMime = extToMime[ext] || b.mimeType || \"application/octet-stream\";\n  }\n\n  b.mimeType = finalMime;\n  results.push({ json: { ...item.json, filename: fileName || \"uploaded-file\", mimetype: finalMime }, binary: { ...item.binary, file: b } });\n}\n\nreturn results;"
+        "jsCode": "// Get data from webhook body\nconst webhookData = $('Webhook').item.json.body;\nconst fileData = webhookData.fileData;\nconst fileName = webhookData.fileName || 'uploaded-file';\nconst mimeType = webhookData.mimeType || 'application/octet-stream';\n\n// Decode base64 to buffer\nconst buffer = Buffer.from(fileData, 'base64');\n\n// Return with binary data\nreturn [{\n  json: {\n    filename: fileName,\n    mimetype: mimeType,\n    GEMINI_API_KEY: $('Config5').item.json.GEMINI_API_KEY\n  },\n  binary: {\n    file: {\n      data: buffer.toString('base64'),\n      mimeType: mimeType,\n      fileName: fileName\n    }\n  }\n}];"
       },
       "id": "2737af8a-c669-461d-8c60-ca1c78508e3d",
-      "name": "Fix MIME Type1",
+      "name": "Decode Base64 File",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
@@ -418,7 +418,7 @@
             },
             {
               "name": "x-goog-api-key",
-              "value": "={{ $('Config5').item.json.GEMINI_API_KEY }}"
+              "value": "={{ $json.GEMINI_API_KEY }}"
             }
           ]
         },
@@ -541,57 +541,7 @@
       ]
     }
   ],
-  "pinData": {
-    "Webhook": [
-      {
-        "json": {
-          "headers": {
-            "host": "tahayt.app.n8n.cloud",
-            "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Cursor/2.1.48 Chrome/138.0.7204.251 Electron/37.7.0 Safari/537.36",
-            "content-length": "75",
-            "accept": "*/*",
-            "accept-encoding": "gzip, br",
-            "accept-language": "en-US",
-            "cdn-loop": "cloudflare; loops=1; subreqs=1",
-            "cf-connecting-ip": "94.140.11.205",
-            "cf-ew-via": "15",
-            "cf-ipcountry": "US",
-            "cf-ray": "9bf92657767eba37-MIA",
-            "cf-visitor": "{\"scheme\":\"https\"}",
-            "cf-worker": "n8n.cloud",
-            "content-type": "application/json",
-            "origin": "http://localhost:5174",
-            "priority": "u=1, i",
-            "referer": "http://localhost:5174/",
-            "sec-ch-ua": "\"Not)A;Brand\";v=\"8\", \"Chromium\";v=\"138\"",
-            "sec-ch-ua-mobile": "?0",
-            "sec-ch-ua-platform": "\"macOS\"",
-            "sec-fetch-dest": "empty",
-            "sec-fetch-mode": "cors",
-            "sec-fetch-site": "cross-site",
-            "x-forwarded-for": "94.140.11.205, 172.68.12.179",
-            "x-forwarded-host": "tahayt.app.n8n.cloud",
-            "x-forwarded-port": "443",
-            "x-forwarded-proto": "https",
-            "x-forwarded-server": "traefik-prod-users-gwc-78-74d8c5c9cc-dwgl8",
-            "x-is-trusted": "yes",
-            "x-real-ip": "94.140.11.205"
-          },
-          "params": {},
-          "query": {},
-          "body": {
-            "action": "list_stores",
-            "apiKey": "AIzaSyDItMt-Z8Xt0B2-60pw94al16bys_bBZOc"
-          },
-          "webhookUrl": "https://tahayt.app.n8n.cloud/webhook/gemini-api",
-          "executionMode": "production"
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ]
-  },
+  "pinData": {},
   "connections": {
     "Webhook": {
       "main": [
@@ -629,7 +579,7 @@
         ],
         [
           {
-            "node": "Fix MIME Type1",
+            "node": "Decode Base64 File",
             "type": "main",
             "index": 0
           }
@@ -701,7 +651,7 @@
         ]
       ]
     },
-    "Fix MIME Type1": {
+    "Decode Base64 File": {
       "main": [
         [
           {
