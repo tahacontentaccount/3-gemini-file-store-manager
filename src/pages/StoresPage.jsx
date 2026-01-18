@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import Header from '../components/Header';
@@ -16,24 +16,23 @@ const StoresPage = () => {
   const [storeName, setStoreName] = useState('');
   const [creating, setCreating] = useState(false);
   const creatingRef = useRef(false);
+  const loadingRef = useRef(false); // Prevent multiple simultaneous loadStores calls
   const navigate = useNavigate();
   const api = useApi();
 
-  useEffect(() => {
-    const apiKey = localStorage.getItem('gemini_api_key');
-    const n8nUrl = localStorage.getItem('n8n_base_url');
-    if (!apiKey || !n8nUrl) {
-      navigate('/');
+  const loadStores = useCallback(async () => {
+    // Prevent multiple simultaneous calls
+    if (loadingRef.current) {
+      console.log('[loadStores] Already in progress, skipping duplicate call');
       return;
     }
-    loadStores();
-  }, [navigate]);
 
-  const loadStores = async () => {
+    console.log('[loadStores] Starting API call to list stores');
+    loadingRef.current = true;
     try {
       setLoading(true);
       const response = await api.listStores();
-      console.log('List stores response:', JSON.stringify(response, null, 2));
+      console.log('[loadStores] List stores response:', JSON.stringify(response, null, 2));
       
       if (response.success) {
         // Handle different possible response formats
@@ -54,8 +53,23 @@ const StoresPage = () => {
       toast.error('Error loading stores: ' + error.message);
     } finally {
       setLoading(false);
+      loadingRef.current = false;
     }
-  };
+  }, [api]);
+
+  useEffect(() => {
+    console.log('[StoresPage] useEffect running - checking credentials');
+    const apiKey = localStorage.getItem('gemini_api_key');
+    const n8nUrl = localStorage.getItem('n8n_base_url');
+    if (!apiKey || !n8nUrl) {
+      console.log('[StoresPage] Missing credentials, redirecting to home');
+      navigate('/');
+      return;
+    }
+    console.log('[StoresPage] Credentials found, calling loadStores');
+    loadStores();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run once on mount - navigate and loadStores are stable
 
   const handleCreateStore = async () => {
     // Prevent multiple simultaneous calls
