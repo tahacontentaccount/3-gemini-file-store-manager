@@ -1,13 +1,22 @@
 const useApi = () => {
-  const baseUrl = import.meta.env.VITE_N8N_BASE_URL;
+  // Get baseUrl from localStorage first, fallback to environment variable
+  const getBaseUrl = () => {
+    const stored = localStorage.getItem('n8n_base_url');
+    if (stored) return stored;
+    const envUrl = import.meta.env.VITE_N8N_BASE_URL;
+    if (envUrl && envUrl !== 'undefined') return envUrl;
+    return null;
+  };
 
   const getApiKey = () => localStorage.getItem('gemini_api_key');
 
   const callApi = async (action, data = {}, file = null) => {
+    const baseUrl = getBaseUrl();
+    
     // Check if baseUrl is configured
-    if (!baseUrl || baseUrl === 'undefined') {
-      const error = new Error('API endpoint not configured. Please set VITE_N8N_BASE_URL environment variable.');
-      console.error('Missing VITE_N8N_BASE_URL:', error);
+    if (!baseUrl) {
+      const error = new Error('API endpoint not configured. Please enter your n8n webhook URL in the settings.');
+      console.error('Missing n8n base URL:', error);
       throw error;
     }
 

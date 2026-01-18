@@ -5,19 +5,29 @@ import Button from '../components/Button';
 
 const ApiKeyPage = () => {
   const [apiKey, setApiKey] = useState('');
+  const [n8nBaseUrl, setN8nBaseUrl] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
     const storedKey = localStorage.getItem('gemini_api_key');
-    if (storedKey) {
+    const storedUrl = localStorage.getItem('n8n_base_url');
+    if (storedKey && storedUrl) {
       navigate('/stores');
+    } else {
+      // Pre-fill with stored values if they exist
+      if (storedUrl) {
+        setN8nBaseUrl(storedUrl);
+      }
     }
   }, [navigate]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (apiKey.trim()) {
+    if (apiKey.trim() && n8nBaseUrl.trim()) {
+      // Remove trailing slash if present
+      const cleanUrl = n8nBaseUrl.trim().replace(/\/$/, '');
       localStorage.setItem('gemini_api_key', apiKey.trim());
+      localStorage.setItem('n8n_base_url', cleanUrl);
       navigate('/stores');
     }
   };
@@ -82,7 +92,27 @@ const ApiKeyPage = () => {
               color: '#374151',
               marginBottom: '8px'
             }}>
-              API Key
+              n8n Webhook URL
+            </label>
+            <Input
+              type="text"
+              value={n8nBaseUrl}
+              onChange={(e) => setN8nBaseUrl(e.target.value)}
+              placeholder="https://tahayt.app.n8n.cloud/webhook"
+            />
+            <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>
+              Your n8n webhook base URL (without /gemini-api)
+            </p>
+          </div>
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{
+              display: 'block',
+              fontSize: '14px',
+              fontWeight: '600',
+              color: '#374151',
+              marginBottom: '8px'
+            }}>
+              Gemini API Key
             </label>
             <Input
               type="password"
@@ -92,7 +122,7 @@ const ApiKeyPage = () => {
               showPasswordToggle={true}
             />
           </div>
-          <Button type="submit" disabled={!apiKey.trim()} style={{ width: '100%' }}>
+          <Button type="submit" disabled={!apiKey.trim() || !n8nBaseUrl.trim()} style={{ width: '100%' }}>
             Continue
           </Button>
         </form>

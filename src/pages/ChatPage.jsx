@@ -19,7 +19,8 @@ const ChatPage = () => {
 
   useEffect(() => {
     const apiKey = localStorage.getItem('gemini_api_key');
-    if (!apiKey) {
+    const n8nUrl = localStorage.getItem('n8n_base_url');
+    if (!apiKey || !n8nUrl) {
       navigate('/');
       return;
     }
